@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 import os
 from pathlib import Path
-from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3 import A2C
+
 import gymnasium as gym
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
@@ -40,56 +40,7 @@ class trading_env(gym.Env):
         self.sell_price=self.df.iloc[self.index,0]
 
     def step(self,action):
-        
-        #V0
-        # self.total=self.processed_df.iloc[self.index,0]*self.coin+self.usd
-        # reward=self.total-self.prev
-        # new_state=self.processed_df.iloc[self.index-self.window_size+1:self.index+1].values
-        # terminate,truncate=False,False
-        # if self.index==self.df.shape[0]-1:
-        #     terminate,truncate=True,True
 
-        # if action==2:
-        #     if len(self.buy_list)>0:
-        #         sell_amount=self.buy_list.pop()
-        #         self.coin-=sell_amount
-        #         self.usd+=sell_amount*self.df.iloc[self.index,0]
-        # elif action==0:
-        #     if self.usd>self.order_size:
-        #         buy_amount=self.order_size/self.df.iloc[self.index,0]
-        #         self.coin+=buy_amount
-        #         self.buy_list.append(buy_amount)
-        #         self.usd-=self.order_size
-
-        # self.prev=self.total
-        # self.index+=1
-        # return new_state,reward,terminate,truncate,{}
-
-        #V1
-        # self.total=self.processed_df.iloc[self.index,0]*self.coin+self.usd
-        # new_state=self.processed_df.iloc[self.index-self.window_size+1:self.index+1].values
-        # reward=0
-        # terminate,truncate=False,False
-        # if self.index==self.df.shape[0]-1:
-        #     terminate,truncate=True,True
-        # if (self.usd==0 and action==0) or\
-        #     (self.coin==0 and action==2):
-        #     reward=-1
-        # else:
-        #     if action==2:
-        #         reward=self.coin*(self.df.iloc[self.index,0]-self.buy_price)
-        #         self.usd=self.coin*self.df.iloc[self.index,0]
-        #         self.coin=0
-        #     elif action==0:
-        #         self.buy_price=self.df.iloc[self.index,0]
-        #         self.coin=self.usd/self.df.iloc[self.index,0]
-        #         self.usd=0
-
-        # self.prev=self.total
-        # self.index+=1
-        # return new_state,reward,terminate,truncate,{}
-        
-        #V2
         self.total=self.processed_df.iloc[self.index,0]*self.coin+self.usd
         reward=0
         new_state=self.processed_df.iloc[self.index-self.window_size+1:self.index+1].values
@@ -122,8 +73,10 @@ class trading_env(gym.Env):
         return new_state,reward,terminate,truncate,{}
 
 
-    def reset(self,seed=None,option=None):
+    def reset(self,seed=None,options=None):
         self.index=self.window_size
+        self.buy_price=self.df.iloc[self.index,0]
+        self.sell_price=self.df.iloc[self.index,0]
 
         self.total=self.initial_balance
         self.prev=self.initial_balance
@@ -136,5 +89,5 @@ class trading_env(gym.Env):
 if __name__=='__main__':
     df=pd.read_csv(os.path.join(Path(__file__).parent,'data/SPX/SPX_1d.csv'),index_col=0).iloc[-1500:]
     env=trading_env(df=df,window_size=5)
-    print(env.observation_space.shape)
+    print(env.total)
 

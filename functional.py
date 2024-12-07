@@ -36,6 +36,7 @@ def ROI(portforlio_history):
     end_portforlio=portforlio_history.iloc[-1]
     return (end_portforlio-start_portforlio)*100/start_portforlio
 
+
 class agent():
     def __init__(self,model='DQN',policy='MlpPolicy',total_timesteps=10000,**kwargs):
         self.model_choice={'DQN':DQN,'A2C':A2C,'PPO':PPO}
@@ -102,5 +103,4 @@ class agent():
         ax.set_title(f'{self.model_name}-{self.symbol}')
 
 if __name__=='__main__':
-    m=[10,11,12,13,14,15,14]
-    print(ROI(m))
+    pass
