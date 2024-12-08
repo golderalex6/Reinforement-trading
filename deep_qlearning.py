@@ -1,21 +1,29 @@
 from functional import *
 
+from typing import Any, Dict, List, Optional, Type
+
 import gymnasium as gym
 from gymnasium import spaces
-from typing import Any, Dict, List, Optional, Type
+
 import torch as th
 from torch import nn
-from stable_baselines3.common.policies import BasePolicy
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor,CombinedExtractor,FlattenExtractor,NatureCNN,create_mlp,
 
+from stable_baselines3.common.policies import BasePolicy
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor,CombinedExtractor,FlattenExtractor,NatureCNN,create_mlp
 from stable_baselines3.common.type_aliases import PyTorchObs, Schedule
 
 class LSTM_extractor(BaseFeaturesExtractor):    
-    def __init__(self, observation_space: gym.Space, lstm_hidden_size=128, lstm_num_layers=1, lstm_dropout=0.0):
+    def __init__(
+            self,
+            observation_space: gym.Space,
+            lstm_hidden_size:int = 128,
+            lstm_num_layers:int = 1,
+            lstm_dropout:float = 0.0
+        )->None:
+
         super().__init__(observation_space, lstm_hidden_size)
         
         input_size = observation_space.shape[1]
-        
         self.lstm = nn.LSTM(input_size=input_size, 
                             hidden_size=lstm_hidden_size, 
                             num_layers=lstm_num_layers, 
@@ -59,10 +67,10 @@ class q_network(BasePolicy):
         return data
 
 
-class DQNPolicy(BasePolicy):
+class DQN_policy(BasePolicy):
 
-    q_net: QNetwork
-    q_net_target: QNetwork
+    q_net: q_network
+    q_net_target: q_network
 
     def __init__(
         self,
@@ -115,9 +123,9 @@ class DQNPolicy(BasePolicy):
 
         self.optimizer = self.optimizer_class(self.q_net.parameters(),lr=lr_schedule(1),**self.optimizer_kwargs,)
 
-    def make_q_net(self) -> QNetwork:
+    def make_q_net(self) -> q_network:
         net_args = self._update_features_extractor(self.net_args, features_extractor=None)
-        return QNetwork(**net_args).to(self.device)
+        return q_network(**net_args).to(self.device)
 
     def forward(self, obs: PyTorchObs, deterministic: bool = True,*args) -> th.Tensor:
         return self._predict(obs, deterministic=deterministic)
@@ -148,7 +156,8 @@ policy_kwargs=dict(
     features_extractor_class=LSTM_extractor,
     activation_fn=nn.LeakyReLU,
 )
-dqn=agent('DQN',DQNPolicy,total_timesteps=10000,**policy_kwargs)
+
+dqn=agent('DQN',DQN_policy,total_timesteps=10000,**policy_kwargs)
 dqn.learn()
 dqn.evaluate()
 dqn.visualize()

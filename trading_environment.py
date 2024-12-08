@@ -27,14 +27,11 @@ class trading_env(gym.Env):
         self.observation_min=self.processed_df.min().values
         
         self.initial_balance=initial_balance
-        self.order_size=self.initial_balance*percent
-
         self.usd=self.initial_balance
         self.coin=0
-        self.buy_list=[]
 
         self.total=self.initial_balance
-        self.prev=0
+        self.prev=self.initial_balance
 
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
@@ -74,6 +71,7 @@ class trading_env(gym.Env):
 
 
     def reset(self,seed=None,options=None):
+
         self.index=self.window_size
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
@@ -88,6 +86,7 @@ class trading_env(gym.Env):
 
 if __name__=='__main__':
     df=pd.read_csv(os.path.join(Path(__file__).parent,'data/SPX/SPX_1d.csv'),index_col=0).iloc[-1500:]
-    env=trading_env(df=df,window_size=5)
+    gym.register(id='trading/trading_env',entry_point=trading_env)
+    env=gym.make('trading/trading_env',df=df,window_size=5)
     print(env.total)
 
