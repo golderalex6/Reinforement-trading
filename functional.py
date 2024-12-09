@@ -6,15 +6,16 @@ import os
 from pathlib import Path
 
 from stable_baselines3 import A2C,PPO,DQN
-from stable_baselines3.common.torch_layers import FlattenExtractor
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 import gymnasium as gym
 from trading_environment import trading_env
-import tensorflow as tf
 
 from torch import nn,optim
+import torch
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
+
 
 def max_drawdown(portforlio_history):
     portforlio_history=pd.Series(portforlio_history)
@@ -38,23 +39,20 @@ def ROI(portforlio_history):
 
 class agent():
     def __init__(self) -> None:
+        # self.SEED = 44
+        # self._model = None
 
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
-            parameter=json.loads(f.read())
-            self._start_date=parameter['start_date']
-            self._test_date=parameter['test_date']
-            self._end_date=parameter['end_date']
-            self._window_size=parameter['window_size']
-            self._symbol=parameter['symbol']
+            self._parameters=json.loads(f.read())
 
     def _setup(self) -> None:
         
-        df=pd.read_csv(os.path.join(Path(__file__).parent,'data',self._symbol,f"{self._symbol}_1d.csv"),index_col=0)
-        self._df_train=df.loc[self._start_date:self._test_date]
-        self._df_test=df.loc[self._test_date:self._end_date]
+        df=pd.read_csv(os.path.join(Path(__file__).parent,'data',self._parameters['symbol'],f"{self._parameters['symbol']}_1d.csv"),index_col=0)
+        self._df_train=df.loc[self._parameters['start_date']:self._parameters['test_date']]
+        self._df_test=df.loc[self._parameters['test_date']:self._parameters['end_date']]
 
-        self._env_train = trading_env(df = self._df_train,window_size = 5)
-        self._env_test = trading_env(df = self._df_test,window_size = 5)
+        self._env_train = trading_env(df = self._df_train,window_size = self._parameters['window_size'])
+        self._env_test = trading_env(df = self._df_test,window_size = self._parameters['window_size'])
     
     def evaluate(self) -> None:
 
@@ -63,7 +61,7 @@ class agent():
 
         current_state,info=self._env_test.reset()
         while True:
-            action,state=self._model.predict(current_state)
+            action,_=self._model.predict(current_state)
             action=int(action)
             current_state,reward,terminated,truncated,info=self._env_test.step(action)
 
@@ -72,13 +70,14 @@ class agent():
 
             if terminated:
                 break
+
         drawdown=max_drawdown(self.portforlio_history)
         pnl=PnL(self.portforlio_history)
         roi=ROI(self.portforlio_history)
 
-        print('Max drawdown : ',drawdown)
-        print('PnL : ',pnl)
-        print('Roi : ',roi)
+        print(f'Max drawdown : {round(drawdown,3)}')
+        print(f'PnL : {round(pnl,3)}')
+        print(f'Roi : {round(roi,3)}')
 
         fg=plt.figure()
         ax=fg.add_subplot()
@@ -88,7 +87,7 @@ class agent():
                 ax.text(i,self._df_test.iloc[i,0],'B',color='C2')
             elif self.action_list[i]==2:
                 ax.text(i,self._df_test.iloc[i,0],'S',color='C3')
-        ax.set_title(f'{self._symbol} {self._start_date}:{self._end_date}')
+        ax.set_title(f"{self._parameters['symbol']} {self._parameters['test_date']}:{self._parameters['end_date']}")
         plt.show()
     
 if __name__=='__main__':

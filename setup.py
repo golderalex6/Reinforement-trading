@@ -22,8 +22,6 @@ a2c_metadata = {
         'layers':[100,50,20,10,5],
         'activation':'LeakyReLU',
         'optimizer':'Adam',
-        'epochs':32,
-        'batch_size':10,
         'learning_rate':0.0003,
         'policy':'MlpPolicy'
     }
@@ -34,11 +32,11 @@ dql_metadata = {
         'layers':[100,50,20,10,5],
         'activation':'LeakyReLU',
         'optimizer':'Adam',
-        'epochs':32,
         'batch_size':10,
         'learning_rate':0.0003,
+        'policy':'MlpPolicy'
     }
-with open(os.path.join(Path(__file__).parent,'metadata','dql_metadata.json'),'w+') as f:
+with open(os.path.join(Path(__file__).parent,'metadata','dqn_metadata.json'),'w+') as f:
     json.dump(dql_metadata,f,indent = 4)
 
 os.mkdir(os.path.join(Path(__file__).parent,'models'))

@@ -8,8 +8,6 @@
     ],
     "activation": "LeakyReLU",
     "optimizer": "Adam",
-    "epochs": 32,
-    "batch_size": 10,
     "learning_rate": 0.0003,
     "policy": "MlpPolicy"
 }

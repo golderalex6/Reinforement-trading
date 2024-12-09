@@ -73,6 +73,7 @@ class trading_env(gym.Env):
     def reset(self,seed=None,options=None):
 
         self.index=self.window_size
+
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
 
@@ -85,8 +86,4 @@ class trading_env(gym.Env):
         return self.processed_df.iloc[self.index-self.window_size:self.index].values,{}
 
 if __name__=='__main__':
-    df=pd.read_csv(os.path.join(Path(__file__).parent,'data/SPX/SPX_1d.csv'),index_col=0).iloc[-1500:]
-    gym.register(id='trading/trading_env',entry_point=trading_env)
-    env=gym.make('trading/trading_env',df=df,window_size=5)
-    print(env.total)
-
+    pass
