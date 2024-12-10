@@ -10,7 +10,7 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 class trading_env(gym.Env):
-    def __init__(self,df,window_size=1,initial_balance=10**4,percent=0.05):
+    def __init__(self,df,window_size=1,initial_balance=10**4):
         super().__init__()
 
         self.window_size=window_size

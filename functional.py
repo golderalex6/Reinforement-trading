@@ -1,18 +1,21 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 import json
 import os
 from pathlib import Path
-
-from stable_baselines3 import A2C,PPO,DQN
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from abc import ABC,abstractmethod
+# from typing import Callable,Iterable,Any,Type
+import typing
 
 import gymnasium as gym
 from trading_environment import trading_env
-
-from torch import nn,optim
 import torch
+from torch import nn,optim
+from stable_baselines3 import A2C,PPO,DQN
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
@@ -37,10 +40,9 @@ def ROI(portforlio_history):
     return (end_portforlio-start_portforlio)*100/start_portforlio
 
 
-class agent():
+class agent(ABC):
     def __init__(self) -> None:
-        # self.SEED = 44
-        # self._model = None
+        self._model = None
 
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
             self._parameters=json.loads(f.read())
@@ -53,15 +55,39 @@ class agent():
 
         self._env_train = trading_env(df = self._df_train,window_size = self._parameters['window_size'])
         self._env_test = trading_env(df = self._df_test,window_size = self._parameters['window_size'])
-    
+
+    @abstractmethod
+    def load(self) -> typing.Any:
+        '''
+        abstract method
+        '''
+        pass
+
+    def predict(self,state:typing.Any) -> typing.Iterable:
+
+        """
+        Predicts the action(s) for a given state using the loaded PPO model.
+
+        Args:
+            state (Any): The input state for which to predict the action(s).
+
+        Returns:
+            Iterable: The predicted action(s) as output by the model.
+        """
+        return self._model.predict(state)
+
     def evaluate(self) -> None:
+        """
+
+        """
+        self._setup()
 
         self.portforlio_history=[]
         self.action_list=[]
 
         current_state,info=self._env_test.reset()
         while True:
-            action,_=self._model.predict(current_state)
+            action,_=self.predict(current_state)
             action=int(action)
             current_state,reward,terminated,truncated,info=self._env_test.step(action)
 

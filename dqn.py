@@ -54,7 +54,26 @@ class dqn_trading(agent):
         self._model.learn(total_timesteps = total_timesteps)
         self._model.save(os.path.join(Path(__file__).parent,'models','dqn.zip'))
 
+    def load(self,path:str = '') -> None:
+        """
+        Loads a pre-trained PPO model from the specified path.
+
+        Defaults to './models/ppo.zip' in the script's directory if no path is provided.
+
+        Args:
+            path (str): File path to the model. Defaults to an empty string.
+
+        Returns:
+            None
+        """
+
+        if path == '':
+            path = os.path.join(Path(__file__).parent,'models','dqn.zip')
+        self._model = DQN.load(path)
+
+
 if __name__ == '__main__':
     dqn = dqn_trading()
-    dqn.learn()
+    # dqn.learn()
+    dqn.load()
     dqn.evaluate()
