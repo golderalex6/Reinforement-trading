@@ -5,4 +5,5 @@ matplotlib
 gymnasium
 stable_baselines3
 torch
-tensorflow
+
+git+https://github.com/rongardF/tvdatafeed.git

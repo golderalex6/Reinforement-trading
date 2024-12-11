@@ -1,8 +1,25 @@
 from functional import *
 
-class ppo_trading(agent):
+class PpoTrading(agent):
 
     def __init__(self) -> None:
+        """
+        Initialize the class by loading metadata and setting up the policy parameters.
+
+        This constructor loads a JSON metadata file that contains model architecture details 
+        and optimizer settings. It then sets up the policy network architecture and optimizer 
+        class using the information from the metadata.
+
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+                Initializes the class with the loaded metadata and sets the policy network architecture 
+                and optimizer parameters.
+        """
 
         super().__init__()
 
@@ -16,6 +33,19 @@ class ppo_trading(agent):
                 }
 
     def learn(self,total_timesteps:int = 10000) -> None:
+        """
+        Train the PPO model using the specified number of timesteps and save the trained model.
+
+        Parameters:
+        -----------
+            total_timesteps : int, optional, default=10000
+                The total number of timesteps to train the model.
+
+        Returns:
+        --------
+            None
+                Trains the model on the training environment and saves the trained model to disk.
+        """
 
         self._setup()
         self._model = PPO(
@@ -36,10 +66,12 @@ class ppo_trading(agent):
 
         Defaults to './models/ppo.zip' in the script's directory if no path is provided.
 
-        Args:
+        Parameters:
+        -----------
             path (str): File path to the model. Defaults to an empty string.
 
         Returns:
+        --------
             None
         """
 
@@ -48,7 +80,7 @@ class ppo_trading(agent):
         self._model = PPO.load(path)
 
 if __name__ == '__main__': 
-    ppo=ppo_trading()
+    ppo=PpoTrading()
     # ppo.learn()
     ppo.load()
     ppo.evaluate()

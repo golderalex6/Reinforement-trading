@@ -1,6 +1,6 @@
 from functional import *
 
-class LSTM_extractor(BaseFeaturesExtractor):
+class LstmExtractor(BaseFeaturesExtractor):
     def __init__(
             self,
             observation_space: gym.Space,
@@ -8,6 +8,20 @@ class LSTM_extractor(BaseFeaturesExtractor):
             lstm_num_layers:int = 1,
             lstm_dropout:float = 0.0
         ) -> None:
+        """
+        Initializes an LSTM-based neural network for processing sequential data in a reinforcement learning setting.
+
+        Parameters:
+        -----------
+            observation_space (gym.Space): The observation space of the environment, defining the input shape for the network.
+            lstm_hidden_size (int, optional): The number of features in the hidden state of the LSTM. Defaults to 128.
+            lstm_num_layers (int, optional): The number of recurrent layers in the LSTM. Defaults to 1.
+            lstm_dropout (float, optional): The dropout probability for the LSTM layers. Defaults to 0.0.
+
+        Returns:
+        --------
+            None
+        """
 
         super().__init__(observation_space, lstm_hidden_size)
         
@@ -21,12 +35,34 @@ class LSTM_extractor(BaseFeaturesExtractor):
                 )
         
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
+        """
+        Processes input observations through the LSTM and returns the final hidden state.
+
+        Parameters:
+        -----------
+            observations (torch.Tensor): Input tensor containing sequential data, with shape (batch_size, sequence_length, input_size).
+
+        Returns:
+        --------
+            torch.Tensor: The final hidden state of the LSTM, with shape (batch_size, hidden_size).
+        """
         lstm_out, (h_n, c_n) = self.lstm(observations)
         return h_n[-1]
 
-class dqn_trading(agent):
+class DqnTrading(agent):
 
     def __init__(self) -> None:
+        """
+        Initializes a DQN trading agent with metadata loaded from a JSON file.
+
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+        """
 
         super().__init__()
         with open(os.path.join(Path(__file__).parent,'metadata','dqn_metadata.json'),'r+') as f:
@@ -36,10 +72,21 @@ class dqn_trading(agent):
                     'net_arch':self._metadata['layers'],
                     'activation_fn':getattr(nn,self._metadata['activation']),
                     'optimizer_class':getattr(optim,self._metadata['optimizer']),
-                    'features_extractor_class':LSTM_extractor,
+                    'features_extractor_class':LstmExtractor,
                 }
 
     def learn(self,total_timesteps:int = 40000):
+        """
+        Trains the DQN agent for a specified number of timesteps and saves the trained model.
+
+        Parameters:
+        -----------
+            total_timesteps (int, optional): The total number of timesteps to train the model. Defaults to 40,000.
+
+        Returns:
+        --------
+            None
+        """ 
         
         self._setup()
         self._model = DQN(
@@ -60,10 +107,12 @@ class dqn_trading(agent):
 
         Defaults to './models/ppo.zip' in the script's directory if no path is provided.
 
-        Args:
+        Parameters:
+        -----------
             path (str): File path to the model. Defaults to an empty string.
 
         Returns:
+        --------
             None
         """
 
@@ -73,7 +122,7 @@ class dqn_trading(agent):
 
 
 if __name__ == '__main__':
-    dqn = dqn_trading()
+    dqn = DqnTrading()
     # dqn.learn()
     dqn.load()
     dqn.evaluate()

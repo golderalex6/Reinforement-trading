@@ -4,13 +4,33 @@ import matplotlib.pyplot as plt
 
 import os
 from pathlib import Path
+import typing
 
 import gymnasium as gym
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
-class trading_env(gym.Env):
-    def __init__(self,df,window_size=1,initial_balance=10**4):
+class TradingEnv(gym.Env):
+    def __init__(self,df,window_size=1,initial_balance=10**4) -> None:
+        """
+        Initializes a custom financial environment for reinforcement learning.
+
+        This function sets up the environment with financial data, defines the observation 
+        and action spaces, and initializes key attributes such as the balance, coin holdings, 
+        and price tracking.
+
+        Parameters:
+        -----------
+            df (pd.DataFrame): A DataFrame containing the financial data with at least a 'Close' column.
+            window_size (int, optional): The size of the observation window for the environment. 
+                Defaults to 1.
+            initial_balance (float, optional): The initial USD balance for the simulation. 
+                Defaults to 10,000.
+
+        Returns:
+        --------
+            None
+        """
         super().__init__()
 
         self.window_size=window_size
@@ -36,7 +56,30 @@ class trading_env(gym.Env):
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
 
-    def step(self,action):
+    def step(self,action:int) -> typing.Iterable:
+        """
+        Performs a single step in the financial trading environment based on the given action.
+
+        This method updates the environment's state, calculates the reward, and determines 
+        whether the episode should terminate or truncate. It handles the buying, selling, 
+        or holding of assets and adjusts the balance and coin holdings accordingly.
+
+        Parameters:
+        -----------
+            action (int): The action to be taken. 
+                - 0: Buy
+                - 1: Hold
+                - 2: Sell
+
+        Returns:
+        --------
+            typing.Iterable: A tuple containing:
+                - new_state (np.ndarray): The updated state of the environment after the action.
+                - reward (float): The reward obtained from taking the action.
+                - terminate (bool): Whether the episode has ended.
+                - truncate (bool): Whether the episode was truncated.
+                - info (dict): Additional information (empty dictionary in this case).
+        """
 
         self.total=self.processed_df.iloc[self.index,0]*self.coin+self.usd
         reward=0
@@ -70,7 +113,25 @@ class trading_env(gym.Env):
         return new_state,reward,terminate,truncate,{}
 
 
-    def reset(self,seed=None,options=None):
+    def reset(self,seed=None,options=None) -> typing.Iterable:     
+        """
+        Resets the environment to its initial state.
+
+        This method initializes or resets all key attributes of the environment, such as 
+        balance, coin holdings, and indices, to prepare for a new episode.
+
+        Parameters:
+        -----------
+            seed (int, optional): A seed for reproducibility. Defaults to None.
+            options (dict, optional): Additional options for resetting the environment. 
+                Defaults to None.
+
+        Returns:
+        --------
+            typing.Iterable: A tuple containing:
+                - initial_state (np.ndarray): The initial state of the environment.
+                - info (dict): Additional information (empty dictionary in this case).
+        """
 
         self.index=self.window_size
 

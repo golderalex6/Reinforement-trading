@@ -6,11 +6,10 @@ import json
 import os
 from pathlib import Path
 from abc import ABC,abstractmethod
-# from typing import Callable,Iterable,Any,Type
 import typing
 
 import gymnasium as gym
-from trading_environment import trading_env
+from trading_environment import TradingEnv
 import torch
 from torch import nn,optim
 from stable_baselines3 import A2C,PPO,DQN
@@ -20,20 +19,64 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 
-def max_drawdown(portforlio_history):
+def max_drawdown(portforlio_history:typing.Iterable) -> float:
+    """
+    Calculate the maximum drawdown of a portfolio based on its historical value.
+
+    Parameters:
+    -----------
+        portfolio_history : iterable.An iterable (e.g., list or array) containing the portfolio's historical values over time.
+
+    Returns:
+    --------
+        float
+            The maximum drawdown as a percentage, representing the largest peak-to-trough decline
+            in the portfolio's value.
+    """
+
     portforlio_history=pd.Series(portforlio_history)
     running_max=portforlio_history.cummax()
     drawdown=(running_max-portforlio_history)/running_max
     drawdown=drawdown.max()
     return drawdown*100
 
-def PnL(portforlio_history):
+def PnL(portforlio_history:typing.Iterable) -> float:
+    """
+    Calculate the profit and loss (PnL) of a portfolio based on its historical value.
+
+    Parameters:
+    -----------
+        portfolio_history : iterable
+            An iterable (e.g., list or array) containing the portfolio's historical values over time.
+
+    Returns:
+    --------
+        float
+            The difference between the final and initial portfolio values, representing the 
+            profit or loss over the given period.
+    """
+
     portforlio_history=pd.Series(portforlio_history)
     start_portforlio=portforlio_history.iloc[0]
     end_portforlio=portforlio_history.iloc[-1]
     return end_portforlio-start_portforlio
 
-def ROI(portforlio_history):
+def ROI(portforlio_history:typing.Iterable) -> float:
+    """
+    Calculate the Return on Investment (ROI) of a portfolio based on its historical value.
+
+    Parameters:
+    -----------
+        portfolio_history : iterable
+            An iterable (e.g., list or array) containing the portfolio's historical values over time.
+
+    Returns:
+    --------
+        float
+            The percentage return on investment, calculated as the difference between the final
+            and initial portfolio values, relative to the initial value.
+    """
+
     portforlio_history=pd.Series(portforlio_history)
     start_portforlio=portforlio_history.iloc[0]
     end_portforlio=portforlio_history.iloc[-1]
@@ -42,24 +85,46 @@ def ROI(portforlio_history):
 
 class agent(ABC):
     def __init__(self) -> None:
+        """
+        Initialize the class by loading model parameters from a JSON file.
+
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+        """
         self._model = None
 
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
             self._parameters=json.loads(f.read())
 
     def _setup(self) -> None:
+        """
+        Set up the training and testing environments by loading historical data and splitting it.
+
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+        """
         
         df=pd.read_csv(os.path.join(Path(__file__).parent,'data',self._parameters['symbol'],f"{self._parameters['symbol']}_1d.csv"),index_col=0)
         self._df_train=df.loc[self._parameters['start_date']:self._parameters['test_date']]
         self._df_test=df.loc[self._parameters['test_date']:self._parameters['end_date']]
 
-        self._env_train = trading_env(df = self._df_train,window_size = self._parameters['window_size'])
-        self._env_test = trading_env(df = self._df_test,window_size = self._parameters['window_size'])
+        self._env_train = TradingEnv(df = self._df_train,window_size = self._parameters['window_size'])
+        self._env_test = TradingEnv(df = self._df_test,window_size = self._parameters['window_size'])
 
     @abstractmethod
     def load(self) -> typing.Any:
         '''
-        abstract method
+        Abstract method
         '''
         pass
 
@@ -78,8 +143,20 @@ class agent(ABC):
 
     def evaluate(self) -> None:
         """
+        Evaluate the model's performance on the test set by simulating trading actions and calculating key metrics.
 
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+                This method doesn't return any values, but prints the evaluation metrics (Max drawdown, PnL, ROI) 
+                and displays a plot showing the trading actions ('B' for buy, 'S' for sell) along with the 
+                closing price during the test period.
         """
+
         self._setup()
 
         self.portforlio_history=[]

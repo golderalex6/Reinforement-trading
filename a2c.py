@@ -1,8 +1,19 @@
 from functional import *
 
-class a2c_trading(agent):
+class A2cTrading(agent):
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initializes the class by loading metadata and setting up policy keyword arguments.
+
+        Parameters:
+        -----------
+            None
+
+        Returns:
+        --------
+            None
+        """
 
         super().__init__()
         with open(os.path.join(Path(__file__).parent,'metadata','a2c_metadata.json'),'r+') as f:
@@ -15,6 +26,17 @@ class a2c_trading(agent):
                 }
 
     def learn(self,total_timesteps:int = 10000) -> None:
+        """
+        Trains an A2C (Advantage Actor-Critic) model and saves it.
+
+        Parameters:
+        -----------
+            total_timesteps : int,total timesteps for training. Default is 10,000.
+
+        Returns:
+        --------
+            None
+        """
 
         self._setup()
         self._model = A2C(
@@ -34,10 +56,12 @@ class a2c_trading(agent):
 
         Defaults to './models/ppo.zip' in the script's directory if no path is provided.
 
-        Args:
+        Parameters:
+        -----------
             path (str): File path to the model. Defaults to an empty string.
 
         Returns:
+        --------
             None
         """
 
@@ -46,8 +70,8 @@ class a2c_trading(agent):
         self._model = A2C.load(path)
 
 if __name__ == '__main__': 
-    a2c = a2c_trading()
-    # a2c.learn()
+    a2c = A2cTrading()
+    a2c.learn()
     a2c.load()
     a2c.evaluate()
 
