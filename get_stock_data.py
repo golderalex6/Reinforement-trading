@@ -2,7 +2,6 @@ import pandas as pd
 
 import os
 from pathlib import Path
-import datetime as dt
 
 from tvDatafeed import TvDatafeed,Interval
 

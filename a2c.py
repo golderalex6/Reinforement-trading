@@ -1,4 +1,10 @@
-from functional import *
+import os
+from pathlib import Path
+
+from torch import nn,optim
+from stable_baselines3 import A2C
+
+from functional import agent
 
 class A2cTrading(agent):
 
@@ -15,9 +21,7 @@ class A2cTrading(agent):
             None
         """
 
-        super().__init__()
-        with open(os.path.join(Path(__file__).parent,'metadata','a2c_metadata.json'),'r+') as f:
-            self._metadata = json.load(f)
+        super().__init__(os.path.join(Path(__file__).parent,'metadata','a2c.json'))
         
         self._policy_kwargs = {
                     'net_arch':self._metadata['layers'],

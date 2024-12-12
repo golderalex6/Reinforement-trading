@@ -1,4 +1,12 @@
-from functional import *
+import os
+from pathlib import Path
+
+import torch
+import gymnasium as gym
+from stable_baselines3 import DQN
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+
+from functional import agent
 
 class LstmExtractor(BaseFeaturesExtractor):
     def __init__(
@@ -26,7 +34,7 @@ class LstmExtractor(BaseFeaturesExtractor):
         super().__init__(observation_space, lstm_hidden_size)
         
         input_size = observation_space.shape[1]
-        self.lstm = nn.LSTM(
+        self.lstm = torch.nn.LSTM(
                     input_size = input_size, 
                     hidden_size = lstm_hidden_size, 
                     num_layers = lstm_num_layers, 
@@ -64,14 +72,12 @@ class DqnTrading(agent):
             None
         """
 
-        super().__init__()
-        with open(os.path.join(Path(__file__).parent,'metadata','dqn_metadata.json'),'r+') as f:
-            self._metadata = json.load(f)
+        super().__init__(os.path.join(Path(__file__).parent,'metadata','dqn.json'))
         
         self._policy_kwargs = {
                     'net_arch':self._metadata['layers'],
-                    'activation_fn':getattr(nn,self._metadata['activation']),
-                    'optimizer_class':getattr(optim,self._metadata['optimizer']),
+                    'activation_fn':getattr(torch.nn,self._metadata['activation']),
+                    'optimizer_class':getattr(torch.optim,self._metadata['optimizer']),
                     'features_extractor_class':LstmExtractor,
                 }
 

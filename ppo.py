@@ -1,4 +1,10 @@
-from functional import *
+import os
+from pathlib import Path
+
+from torch import nn,optim
+from stable_baselines3 import PPO
+
+from functional import agent
 
 class PpoTrading(agent):
 
@@ -21,10 +27,7 @@ class PpoTrading(agent):
                 and optimizer parameters.
         """
 
-        super().__init__()
-
-        with open(os.path.join(Path(__file__).parent,'metadata','ppo_metadata.json'),'r+') as f:
-            self._metadata = json.load(f)
+        super().__init__(os.path.join(Path(__file__).parent,'metadata','ppo.json'))
         
         self._policy_kwargs = {
                     'net_arch':self._metadata['layers'],
@@ -81,6 +84,6 @@ class PpoTrading(agent):
 
 if __name__ == '__main__': 
     ppo=PpoTrading()
-    # ppo.learn()
-    ppo.load()
+    ppo.learn()
+    # ppo.load()
     ppo.evaluate()

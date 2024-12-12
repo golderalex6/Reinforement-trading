@@ -26,7 +26,7 @@ ppo_metadata = {
         'learning_rate':0.0003,
         'policy':'MlpPolicy'
     }
-with open(os.path.join(Path(__file__).parent,'metadata','ppo_metadata.json'),'w+') as f:
+with open(os.path.join(Path(__file__).parent,'metadata','ppo.json'),'w+') as f:
     json.dump(ppo_metadata,f,indent = 4)
 
 a2c_metadata = {
@@ -36,7 +36,7 @@ a2c_metadata = {
         'learning_rate':0.0003,
         'policy':'MlpPolicy'
     }
-with open(os.path.join(Path(__file__).parent,'metadata','a2c_metadata.json'),'w+') as f:
+with open(os.path.join(Path(__file__).parent,'metadata','a2c.json'),'w+') as f:
     json.dump(a2c_metadata,f,indent = 4)
 
 dql_metadata = {
@@ -47,7 +47,7 @@ dql_metadata = {
         'learning_rate':0.0003,
         'policy':'MlpPolicy'
     }
-with open(os.path.join(Path(__file__).parent,'metadata','dqn_metadata.json'),'w+') as f:
+with open(os.path.join(Path(__file__).parent,'metadata','dqn.json'),'w+') as f:
     json.dump(dql_metadata,f,indent = 4)
 
 os.mkdir(os.path.join(Path(__file__).parent,'models'))

@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 import json
@@ -8,12 +7,7 @@ from pathlib import Path
 from abc import ABC,abstractmethod
 import typing
 
-import gymnasium as gym
 from trading_environment import TradingEnv
-import torch
-from torch import nn,optim
-from stable_baselines3 import A2C,PPO,DQN
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
@@ -84,7 +78,7 @@ def ROI(portforlio_history:typing.Iterable) -> float:
 
 
 class agent(ABC):
-    def __init__(self) -> None:
+    def __init__(self,metadata_path:str) -> None:
         """
         Initialize the class by loading model parameters from a JSON file.
 
@@ -96,7 +90,8 @@ class agent(ABC):
         --------
             None
         """
-        self._model = None
+        with open(metadata_path,'r+') as f:
+            self._metadata = json.load(f)
 
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
             self._parameters=json.loads(f.read())
