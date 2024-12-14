@@ -1,14 +1,13 @@
 import os
 from pathlib import Path
 
-from torch import nn,optim
 from stable_baselines3 import A2C
 
 from functional import agent
-
+from metadata import a2c_metadata
 class A2cTrading(agent):
 
-    def __init__(self) -> None:
+    def __init__(self,config:dict = {}) -> None:
         """
         Initializes the class by loading metadata and setting up policy keyword arguments.
 
@@ -21,14 +20,8 @@ class A2cTrading(agent):
             None
         """
 
-        super().__init__(os.path.join(Path(__file__).parent,'metadata','a2c.json'))
+        super().__init__(a2c_metadata.METADATA,config)
         
-        self._policy_kwargs = {
-                    'net_arch':self._metadata['layers'],
-                    'activation_fn':getattr(nn,self._metadata['activation']),
-                    'optimizer_class':getattr(optim,self._metadata['optimizer']),
-                }
-
     def learn(self,total_timesteps:int = 10000) -> None:
         """
         Trains an A2C (Advantage Actor-Critic) model and saves it.
@@ -44,11 +37,8 @@ class A2cTrading(agent):
 
         self._setup()
         self._model = A2C(
-                        policy = self._metadata['policy'],
                         env = self._env_train,
-                        learning_rate = self._metadata['learning_rate'],
-                        policy_kwargs=self._policy_kwargs,
-                        verbose=1,
+                        **self._metadata
                     )
 
         self._model.learn(total_timesteps=total_timesteps)
@@ -74,8 +64,13 @@ class A2cTrading(agent):
         self._model = A2C.load(path)
 
 if __name__ == '__main__': 
-    a2c = A2cTrading()
-    a2c.learn()
+    config = {
+            'policy_kwargs': {
+                'net_arch':[100,10]
+                }
+        }
+    a2c = A2cTrading(config)
+    # a2c.learn()
     a2c.load()
     a2c.evaluate()
 

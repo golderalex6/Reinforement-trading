@@ -5,16 +5,13 @@ from torch import nn,optim
 from stable_baselines3 import PPO
 
 from functional import agent
+from metadata import ppo_metadata
 
 class PpoTrading(agent):
 
-    def __init__(self) -> None:
+    def __init__(self,config:dict = {}) -> None:
         """
-        Initialize the class by loading metadata and setting up the policy parameters.
-
-        This constructor loads a JSON metadata file that contains model architecture details 
-        and optimizer settings. It then sets up the policy network architecture and optimizer 
-        class using the information from the metadata.
+        Initializes the class by loading metadata and setting up policy keyword arguments.
 
         Parameters:
         -----------
@@ -23,17 +20,9 @@ class PpoTrading(agent):
         Returns:
         --------
             None
-                Initializes the class with the loaded metadata and sets the policy network architecture 
-                and optimizer parameters.
         """
 
-        super().__init__(os.path.join(Path(__file__).parent,'metadata','ppo.json'))
-        
-        self._policy_kwargs = {
-                    'net_arch':self._metadata['layers'],
-                    'activation_fn':getattr(nn,self._metadata['activation']),
-                    'optimizer_class':getattr(optim,self._metadata['optimizer'])
-                }
+        super().__init__(ppo_metadata.METADATA,config)
 
     def learn(self,total_timesteps:int = 10000) -> None:
         """
@@ -52,13 +41,8 @@ class PpoTrading(agent):
 
         self._setup()
         self._model = PPO(
-                    policy = self._metadata['policy'],
                     env = self._env_train,
-                    learning_rate = self._metadata['learning_rate'],
-                    batch_size = self._metadata['batch_size'],
-                    n_epochs = self._metadata['epochs'],
-                    policy_kwargs=self._policy_kwargs,
-                    verbose=1,
+                    **self._metadata
                 )
         self._model.learn(total_timesteps=total_timesteps)
         self._model.save(os.path.join(Path(__file__).parent,'models','ppo.zip'))

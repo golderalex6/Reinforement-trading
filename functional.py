@@ -12,6 +12,13 @@ from trading_environment import TradingEnv
 plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
+def update_dict(main: dict, config: dict):
+    for key, value in config.items():
+        if isinstance(value, dict):
+            update_dict(main[key], value)
+        else:
+            main[key] = value
+
 
 def max_drawdown(portforlio_history:typing.Iterable) -> float:
     """
@@ -78,7 +85,7 @@ def ROI(portforlio_history:typing.Iterable) -> float:
 
 
 class agent(ABC):
-    def __init__(self,metadata_path:str) -> None:
+    def __init__(self,metadata:dict,config:dict = {}) -> None:
         """
         Initialize the class by loading model parameters from a JSON file.
 
@@ -90,11 +97,11 @@ class agent(ABC):
         --------
             None
         """
-        with open(metadata_path,'r+') as f:
-            self._metadata = json.load(f)
-
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
             self._parameters=json.loads(f.read())
+
+        self._metadata = metadata
+        update_dict(self._metadata,config)
 
     def _setup(self) -> None:
         """

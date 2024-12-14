@@ -7,6 +7,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 from functional import agent
+from metadata import dqn_metadata
 
 class LstmExtractor(BaseFeaturesExtractor):
     def __init__(
@@ -59,7 +60,7 @@ class LstmExtractor(BaseFeaturesExtractor):
 
 class DqnTrading(agent):
 
-    def __init__(self) -> None:
+    def __init__(self,config:dict = {}) -> None:
         """
         Initializes a DQN trading agent with metadata loaded from a JSON file.
 
@@ -71,15 +72,8 @@ class DqnTrading(agent):
         --------
             None
         """
+        super().__init__(dqn_metadata.METADATA,config)
 
-        super().__init__(os.path.join(Path(__file__).parent,'metadata','dqn.json'))
-        
-        self._policy_kwargs = {
-                    'net_arch':self._metadata['layers'],
-                    'activation_fn':getattr(torch.nn,self._metadata['activation']),
-                    'optimizer_class':getattr(torch.optim,self._metadata['optimizer']),
-                    'features_extractor_class':LstmExtractor,
-                }
 
     def learn(self,total_timesteps:int = 40000):
         """
@@ -96,12 +90,8 @@ class DqnTrading(agent):
         
         self._setup()
         self._model = DQN(
-                    policy = self._metadata['policy'],
                     env = self._env_train,
-                    learning_rate = self._metadata['learning_rate'],
-                    batch_size = self._metadata['batch_size'],
-                    policy_kwargs=self._policy_kwargs,
-                    verbose=1,
+                    **self._metadata
                 )
 
         self._model.learn(total_timesteps = total_timesteps)
@@ -125,7 +115,6 @@ class DqnTrading(agent):
         if path == '':
             path = os.path.join(Path(__file__).parent,'models','dqn.zip')
         self._model = DQN.load(path)
-
 
 if __name__ == '__main__':
     dqn = DqnTrading()
