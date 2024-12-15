@@ -92,8 +92,6 @@ class TradingEnv(gym.Env):
 
                 self.usd=self.coin*self.df.iloc[self.index,0]
                 self.coin=0
-            else:
-                reward = -0.5
         elif action==1:
             if self.coin>0:
                 reward=(self.df.iloc[self.index,0]-self.buy_price)*0.1
@@ -106,8 +104,6 @@ class TradingEnv(gym.Env):
 
                 self.coin=self.usd/self.df.iloc[self.index,0]
                 self.usd=0
-            else:
-                reward = -0.5
 
         self.index+=1
         return new_state,reward,terminate,truncate,{}

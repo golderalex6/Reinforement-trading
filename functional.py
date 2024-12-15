@@ -163,7 +163,7 @@ class agent():
         Returns:
             Iterable: The predicted action(s) as output by the model.
         """
-        return self._model.predict(state,deterministic=True)
+        return self._model.predict(state,deterministic = True)
 
     def evaluate(self,show_fig = True) -> dict:
         """
@@ -186,7 +186,7 @@ class agent():
         portforlio_history=[]
         action_list=[]
 
-        current_state,info=self._env_test.reset()
+        current_state,info=self._env_train.reset()
         while True:
             action,_=self.predict(current_state)
             action=int(action)

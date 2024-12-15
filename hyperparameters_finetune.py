@@ -84,7 +84,7 @@ if __name__ == '__main__':
         model = A2cTrading(finetune)
         print(model._metadata)
 
-        model.learn(total_timesteps = 40000)
+        model.learn(total_timesteps = 10000)
         performamce = model.evaluate(show_fig = False)
 
         return performamce['ROI']

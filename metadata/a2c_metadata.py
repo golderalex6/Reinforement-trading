@@ -4,7 +4,7 @@ from stable_baselines3.common.torch_layers import FlattenExtractor
 METADATA = {
         'policy':'MlpPolicy',
         'learning_rate': 0.0007,
-        'n_steps': 5,
+        'n_steps': 100,
         'gamma': 0.99,
         'gae_lambda': 1.0,
         'ent_coef': 0.0,
@@ -20,8 +20,8 @@ METADATA = {
         'stats_window_size': 100,
         'tensorboard_log': None,
         'policy_kwargs': {
-                'net_arch': [100,50,20,10,5],
-                'activation_fn': nn.modules.activation.Tanh,
+                'net_arch': [500,200,100,50,20,10,5],
+                'activation_fn': nn.modules.activation.LeakyReLU,
                 'ortho_init': True,
                 'log_std_init': 0.0,
                 'full_std': True,
@@ -34,7 +34,7 @@ METADATA = {
                 'optimizer_class': optim.Adam,
                 'optimizer_kwargs': None
             },
-        'verbose': 1,
+        'verbose': 0,
         'seed': None,
         'device': 'auto',
         '_init_setup_model': True
