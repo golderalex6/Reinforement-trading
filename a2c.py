@@ -5,6 +5,7 @@ from stable_baselines3 import A2C
 
 from functional import agent
 from metadata import a2c_metadata
+
 class A2cTrading(agent):
 
     def __init__(self,config:dict = {}) -> None:
@@ -65,12 +66,12 @@ class A2cTrading(agent):
 
 if __name__ == '__main__': 
     config = {
-            'policy_kwargs': {
-                'net_arch':[100,10]
-                }
+            'learning_rate': 0.000192205,
+            'gamma': 0.889382
         }
     a2c = A2cTrading(config)
-    # a2c.learn()
-    a2c.load()
-    a2c.evaluate()
+    a2c.learn(total_timesteps = 40000)
+    # a2c.load()
+    m = a2c.evaluate(show_fig = True)
+    print(m)
 

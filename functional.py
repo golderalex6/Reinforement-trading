@@ -13,6 +13,23 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 def update_dict(main: dict, config: dict):
+    """
+    Recursively updates the `main` dictionary with values from the `config` dictionary.
+
+    Parameters:
+    -----------
+        main : dict
+            The primary dictionary that will be updated in-place.
+        config : dict
+            The dictionary containing updates. If a key in `config` corresponds to a dictionary, 
+            the function performs a recursive update; otherwise, it overwrites the value in `main`.
+
+    Returns:
+    --------
+        None
+            The function modifies the `main` dictionary in-place and does not return any value.
+    """
+    
     for key, value in config.items():
         if isinstance(value, dict):
             update_dict(main[key], value)
@@ -84,7 +101,8 @@ def ROI(portforlio_history:typing.Iterable) -> float:
     return (end_portforlio-start_portforlio)*100/start_portforlio
 
 
-class agent(ABC):
+class agent():
+
     def __init__(self,metadata:dict,config:dict = {}) -> None:
         """
         Initialize the class by loading model parameters from a JSON file.
@@ -123,6 +141,10 @@ class agent(ABC):
         self._env_train = TradingEnv(df = self._df_train,window_size = self._parameters['window_size'])
         self._env_test = TradingEnv(df = self._df_test,window_size = self._parameters['window_size'])
 
+    def get_config(self) -> dict:
+
+        return self._metadata
+
     @abstractmethod
     def load(self) -> typing.Any:
         '''
@@ -141,9 +163,9 @@ class agent(ABC):
         Returns:
             Iterable: The predicted action(s) as output by the model.
         """
-        return self._model.predict(state)
+        return self._model.predict(state,deterministic=True)
 
-    def evaluate(self) -> None:
+    def evaluate(self,show_fig = True) -> dict:
         """
         Evaluate the model's performance on the test set by simulating trading actions and calculating key metrics.
 
@@ -161,8 +183,8 @@ class agent(ABC):
 
         self._setup()
 
-        self.portforlio_history=[]
-        self.action_list=[]
+        portforlio_history=[]
+        action_list=[]
 
         current_state,info=self._env_test.reset()
         while True:
@@ -170,30 +192,40 @@ class agent(ABC):
             action=int(action)
             current_state,reward,terminated,truncated,info=self._env_test.step(action)
 
-            self.portforlio_history.append(self._env_test.total)
-            self.action_list.append(action)
+            portforlio_history.append(self._env_test.total)
+            action_list.append(action)
 
             if terminated:
                 break
 
-        drawdown=max_drawdown(self.portforlio_history)
-        pnl=PnL(self.portforlio_history)
-        roi=ROI(self.portforlio_history)
+        drawdown=max_drawdown(portforlio_history)
+        pnl=PnL(portforlio_history)
+        roi=ROI(portforlio_history)
 
         print(f'Max drawdown : {round(drawdown,3)}')
         print(f'PnL : {round(pnl,3)}')
         print(f'Roi : {round(roi,3)}')
 
-        fg=plt.figure()
-        ax=fg.add_subplot()
-        self._df_test['Close'].plot(ax=ax)
-        for i in range(len(self.action_list)):
-            if self.action_list[i]==0:
-                ax.text(i,self._df_test.iloc[i,0],'B',color='C2')
-            elif self.action_list[i]==2:
-                ax.text(i,self._df_test.iloc[i,0],'S',color='C3')
-        ax.set_title(f"{self._parameters['symbol']} {self._parameters['test_date']}:{self._parameters['end_date']}")
-        plt.show()
-    
+        if show_fig:
+            fg=plt.figure()
+            ax=fg.add_subplot()
+            self._df_test['Close'].plot(ax=ax)
+            for i in range(len(action_list)):
+                if action_list[i]==0:
+                    ax.text(i,self._df_test.iloc[i,0],'B',color='C2')
+                elif action_list[i]==2:
+                    ax.text(i,self._df_test.iloc[i,0],'S',color='C3')
+            ax.set_title(f"{self._parameters['symbol']} {self._parameters['test_date']}:{self._parameters['end_date']}")
+            plt.show()
+
+        return  {
+                'Max drawdown':drawdown,
+                'PnL':pnl,
+                'ROI':roi
+            }
+
 if __name__=='__main__':
-    pass
+    from metadata import a2c_metadata
+    m = agent(a2c_metadata.METADATA)
+    m._setup()
+    print(m._df_train)

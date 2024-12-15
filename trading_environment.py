@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,7 +9,7 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 class TradingEnv(gym.Env):
-    def __init__(self,df,window_size=1,initial_balance=10**4) -> None:
+    def __init__(self,df:pd.DataFrame,window_size=1,initial_balance=10**4) -> None:
         """
         Initializes a custom financial environment for reinforcement learning.
 
@@ -31,7 +32,7 @@ class TradingEnv(gym.Env):
         super().__init__()
 
         self.window_size=window_size
-        self.df=df
+        self.df=df.copy()
         self.df['Diff_pct']=self.df['Close'].pct_change(1).fillna(0)*100
         self.processed_df=self.df[['Close','Diff_pct']]
 
@@ -48,7 +49,6 @@ class TradingEnv(gym.Env):
         self.coin=0
 
         self.total=self.initial_balance
-        self.prev=self.initial_balance
 
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
@@ -92,6 +92,8 @@ class TradingEnv(gym.Env):
 
                 self.usd=self.coin*self.df.iloc[self.index,0]
                 self.coin=0
+            else:
+                reward = -0.5
         elif action==1:
             if self.coin>0:
                 reward=(self.df.iloc[self.index,0]-self.buy_price)*0.1
@@ -104,8 +106,9 @@ class TradingEnv(gym.Env):
 
                 self.coin=self.usd/self.df.iloc[self.index,0]
                 self.usd=0
+            else:
+                reward = -0.5
 
-        self.prev=self.total
         self.index+=1
         return new_state,reward,terminate,truncate,{}
 
@@ -136,7 +139,6 @@ class TradingEnv(gym.Env):
         self.sell_price=self.df.iloc[self.index,0]
 
         self.total=self.initial_balance
-        self.prev=self.initial_balance
 
         self.usd=self.initial_balance
         self.coin=0

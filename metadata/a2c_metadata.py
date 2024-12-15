@@ -34,11 +34,11 @@ METADATA = {
                 'optimizer_class': optim.Adam,
                 'optimizer_kwargs': None
             },
-        'verbose': 0,
+        'verbose': 1,
         'seed': None,
         'device': 'auto',
         '_init_setup_model': True
     }
 
 if __name__ == '__main__':
-    print(metadata)
+    print(METADATA)
