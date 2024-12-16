@@ -33,8 +33,10 @@ class TradingEnv(gym.Env):
 
         self.window_size=window_size
         self.df=df.copy()
-        self.df['Diff_pct']=self.df['Close'].pct_change(1).fillna(0)*100
-        self.processed_df=self.df[['Close','Diff_pct']]
+        self.df['Diff'] = self.df['Close'].diff(1).fillna(0)
+        # self.df['Diff_pct']=self.df['Close'].pct_change(1).fillna(0)*100
+        # self.processed_df=self.df[['Close','Diff_pct']]
+        self.processed_df=self.df[['Close','Diff']]
 
         self.index=self.window_size
         
@@ -52,6 +54,8 @@ class TradingEnv(gym.Env):
 
         self.buy_price=self.df.iloc[self.index,0]
         self.sell_price=self.df.iloc[self.index,0]
+
+        self.hold = 0 #mean hold money
 
     def step(self,action:int) -> typing.Iterable:
         """
@@ -79,33 +83,46 @@ class TradingEnv(gym.Env):
         """
 
         self.total=self.processed_df.iloc[self.index,0]*self.coin+self.usd
-        reward=0
-        new_state=self.processed_df.iloc[self.index-self.window_size+1:self.index+1].values
+        reward=-1
+        # new_state=self.processed_df.iloc[self.index-self.window_size+1:self.index+1].values
+
         terminate,truncate=False,False
 
         if self.index==self.df.shape[0]-1:
             terminate,truncate=True,True
+
         if action==2:
             if self.coin>0:
-                reward=self.df.iloc[self.index,0]-self.buy_price
+                # reward=self.df.iloc[self.index,0]-self.buy_price
                 self.sell_price=self.df.iloc[self.index,0]
 
                 self.usd=self.coin*self.df.iloc[self.index,0]
                 self.coin=0
-        elif action==1:
-            if self.coin>0:
-                reward=(self.df.iloc[self.index,0]-self.buy_price)*0.1
-            else:
-                reward=(self.sell_price-self.df.iloc[self.index,0])*0.1
+                self.hold = 0 #mean hold money
+        # elif action==1:
+        #     if self.coin>0:
+        #         reward=(self.df.iloc[self.index,0]-self.buy_price)*0.1
+        #     else:
+        #         reward=(self.sell_price-self.df.iloc[self.index,0])*0.1
         elif action==0:
             if self.usd>0:
-                reward=self.sell_price-self.df.iloc[self.index,0]
+                # reward=self.sell_price-self.df.iloc[self.index,0]
                 self.buy_price=self.df.iloc[self.index,0]
 
                 self.coin=self.usd/self.df.iloc[self.index,0]
                 self.usd=0
 
+                self.hold = 1 #mean hold coin
+
+        if self.total>12000:
+            reward = 200
+            terminate,truncate=True,True
+
+        new_state=self.processed_df.iloc[self.index].values.tolist()
+        new_state.append(self.hold)
+
         self.index+=1
+
         return new_state,reward,terminate,truncate,{}
 
 
@@ -139,7 +156,11 @@ class TradingEnv(gym.Env):
         self.usd=self.initial_balance
         self.coin=0
 
-        return self.processed_df.iloc[self.index-self.window_size:self.index].values,{}
+        self.hold = 0 #mean hold money
+
+        new_state = self.processed_df.iloc[self.index].values.tolist()
+        new_state.append(self.hold)
+        return new_state,{}
 
 if __name__=='__main__':
     pass
