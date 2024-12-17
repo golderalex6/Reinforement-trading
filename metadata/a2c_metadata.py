@@ -4,7 +4,7 @@ from stable_baselines3.common.torch_layers import FlattenExtractor
 METADATA = {
         'policy':'MlpPolicy',
         'learning_rate': 0.0007,
-        'n_steps': 100,
+        'n_steps': 10,
         'gamma': 0.99,
         'gae_lambda': 1.0,
         'ent_coef': 0.0,

@@ -57,7 +57,7 @@ class StockData():
         df=df.set_index('Datetime')
         return df
 
-    def get_data(self,companies:dict) -> None:
+    def get_data(self,companies:dict,start_date:str = "",end_date:str = "") -> None:
         """
         Retrieves historical data for a list of companies and saves it to CSV files.
 
@@ -88,10 +88,10 @@ class StockData():
 
 if __name__=='__main__':
     companies={
-            'TSLA':'NASDAQ',
+            'MSFT':'NASDAQ',
             'MSFT':'NASDAQ',
             'AAPL':'NASDAQ',
         }
     stock=StockData()
-    stock.get_data(companies)
+    stock.get_data(companies,start_date = '2018-01-01',end_date = '2024-01-01')
 

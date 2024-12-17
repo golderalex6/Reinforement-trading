@@ -22,7 +22,7 @@ METADATA = {
         'stats_window_size': 100,
         'tensorboard_log': None,
         'policy_kwargs': {
-                    'net_arch': [100,50,20,10,5],
+                    'net_arch': [200,100,50,20,10],
                     'activation_fn': nn.modules.activation.LeakyReLU,
                     'features_extractor_class':FlattenExtractor,
                     'features_extractor_kwargs': None,

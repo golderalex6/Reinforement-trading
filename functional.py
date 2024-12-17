@@ -163,7 +163,7 @@ class agent():
         Returns:
             Iterable: The predicted action(s) as output by the model.
         """
-        return self._model.predict(state,deterministic = True)
+        return self._model.predict(state,deterministic = False)
 
     def evaluate(self,show_fig = True) -> dict:
         """
