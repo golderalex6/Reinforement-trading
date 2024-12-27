@@ -118,6 +118,6 @@ class DqnTrading(agent):
 
 if __name__ == '__main__':
     dqn = DqnTrading()
-    # dqn.learn()
-    dqn.load()
+    dqn.learn()
+    # dqn.load()
     dqn.evaluate()
