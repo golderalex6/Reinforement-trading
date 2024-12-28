@@ -10,7 +10,7 @@ plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize=
 
 
 class TradingEnv(gym.Env):
-    def __init__(self,df:pd.DataFrame,window_size=1) -> None:
+    def __init__(self,df:pd.DataFrame,window_size=1,render = True) -> None:
         """
         Initializes a custom financial environment for reinforcement learning.
 
@@ -37,10 +37,10 @@ class TradingEnv(gym.Env):
         self.df['Diff_pct']=self.df['Close'].pct_change(1).fillna(0)*100
         self.processed_df=self.df[['Close','Diff_pct']]
 
-        self.window_size=window_size
-        self.index=self.window_size-1
+        self._window_size=window_size
+        self._index=self._window_size-1
         
-        self.observation_space=gym.spaces.Box(low=-np.inf, high=np.inf, shape=(self.window_size,self.processed_df.shape[1]),dtype=float)
+        self.observation_space=gym.spaces.Box(low=-np.inf, high=np.inf, shape=(self._window_size,self.processed_df.shape[1]),dtype=float)
         self.action_space=gym.spaces.Discrete(3)
 
         self.observation_max=self.processed_df.max().values
