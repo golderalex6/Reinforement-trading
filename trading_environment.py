@@ -55,7 +55,6 @@ class TradingEnv(gym.Env):
 
         self.hold = 0
 
-        self.profit = 0
         self.goal = False
         
     def step(self,action:int) -> typing.Iterable:
@@ -115,16 +114,13 @@ class TradingEnv(gym.Env):
         self.index+=1
         self.total = self.df.iloc[self.index,0]*self.coin + self.usd
         new_state=self.processed_df.iloc[self.index].values.tolist()
-        new_state.append(self.hold)
-        new_state.append(self.total)
+        new_state.extend([self.hold,self.total])
 
         if self.index==self.df.shape[0]-1:
             if self.total>= 200:
                 self.goal = True
                 reward = 10000
             terminate,truncate=True,True
-
-
 
         return new_state,reward,terminate,truncate,{}
 
@@ -166,6 +162,12 @@ class TradingEnv(gym.Env):
         self.goal = False
 
         return new_state,None,False,False,{}
+
+    def render(self):
+        pass
+
+    def close(self):
+        pass
 
 if __name__=='__main__':
     pass
