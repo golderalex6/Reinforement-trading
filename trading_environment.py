@@ -9,7 +9,7 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 class TradingEnv(gym.Env):
-    def __init__(self,df:pd.DataFrame,target:float,initial_balance:float = 100,render:bool = True) -> None:
+    def __init__(self,df:pd.DataFrame,target:float,initial_balance:float = 100) -> None:
         """
         Initializes a custom financial environment for reinforcement learning.
 
@@ -41,13 +41,15 @@ class TradingEnv(gym.Env):
         self._initial_balance = initial_balance
         self._target = target
         
-        # self.observation_space=gym.spaces.Box(low=-np.inf, high=np.inf, shape=(4,),dtype=float)
         self.observation_space=gym.spaces.Box(
                             low = np.array([self._close.min(),self._percentage_change.min(),0,0.0]),
                             high = np.array([self._close.max(),self._percentage_change.max(),1,500.0]),
                             shape=(4,),
                             dtype=float
                         )
+        plt.ion()
+        self._fg = plt.figure()
+        self._ax = self._fg.add_subplot()
 
         self.action_space=gym.spaces.Discrete(3)
 
@@ -76,8 +78,9 @@ class TradingEnv(gym.Env):
                 - info (dict): Additional information (empty dictionary in this case).
         """
 
-        terminate,truncate=False,False
         reward = -1
+        self._action_list.append(action)
+        terminate,truncate=False,False
 
         if action==2:
             if self._coin>0:
@@ -137,6 +140,7 @@ class TradingEnv(gym.Env):
                 - initial_state (np.ndarray): The initial state of the environment.
                 - info (dict): Additional information (empty dictionary in this case).
         """
+        self._action_list = []
 
         self._index=0
 
@@ -152,13 +156,25 @@ class TradingEnv(gym.Env):
 
         new_state = [self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total]
 
+
         return new_state,None,False,False,{}
 
     def render(self):
-        pass
 
-    def close(self):
-        pass
+        self._ax.cla()
+        self._close.plot(ax = self._ax,color = 'C0')
+        for i in range(len(self._action_list)):
+            if self._action_list[i]==0:
+                self._ax.text(i,self._close.iloc[i],'B',color='C2')
+            if self._action_list[i]==2:
+                self._ax.text(i,self._close.iloc[i],'S',color='C3')
+        self._ax.set_title(str(self._action_list))
+
+
+        if len(plt.get_fignums()) == 0:
+            raise Exception('Stop trainning')
+
+        plt.pause(0.0001)
 
 if __name__=='__main__':
     seed = np.linspace(0,4*np.pi,10)

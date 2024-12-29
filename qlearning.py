@@ -35,12 +35,7 @@ max_total_portforlio = -(10**9)
 max_ep_reward = -999999999
 max_ep_action_list = []
 
-fg=plt.figure()
-ax=fg.add_subplot()
-
-draw = False
-
-for ep in range(15000):
+for ep in range(10):
 
     next_real_state,reward,terminate,truncate,_=env.reset()
     current_state=convert_state(next_real_state)
@@ -74,52 +69,41 @@ for ep in range(15000):
             max_total_portforlio = max(max_total_portforlio,env.total)
             break
 
-    if draw:
-        ax.cla()
-        m['Close'].plot(ax=ax)
-        for i in range(len(action_list)):
-            if action_list[i]==0:
-                ax.text(i,m.iloc[i,0],'B',color='C2')
-            if action_list[i]==2:
-                ax.text(i,m.iloc[i,0],'S',color='C3')
-        ax.set_title(f'Episode : {ep}') 
-        plt.pause(0.0001)
-        if len(plt.get_fignums()) == 0:
-            raise
+        env.render()
 
     v_epsilon -= v_epsilon_decay
 
 
-fg.clf()
-ax_1 = fg.add_subplot(1,2,1)
-ax_2 = fg.add_subplot(1,2,2)
+# fg.clf()
+# ax_1 = fg.add_subplot(1,2,1)
+# ax_2 = fg.add_subplot(1,2,2)
 
-m['Close'].plot(ax=ax_1)
-for i in range(len(max_ep_action_list)):
-    if max_ep_action_list[i]==0:
-        ax_1.text(i,m.iloc[i,0],'B',color='C2')
-    if max_ep_action_list[i]==2:
-        ax_1.text(i,m.iloc[i,0],'S',color='C3')
-ax_1.set_title(f'Best actions {max_total_portforlio},{max_ep_reward}')
+# m['Close'].plot(ax=ax_1)
+# for i in range(len(max_ep_action_list)):
+#     if max_ep_action_list[i]==0:
+#         ax_1.text(i,m.iloc[i,0],'B',color='C2')
+#     if max_ep_action_list[i]==2:
+#         ax_1.text(i,m.iloc[i,0],'S',color='C3')
+# ax_1.set_title(f'Best actions {max_total_portforlio},{max_ep_reward}')
 
 
-m['Close'].plot(ax=ax_2)
-next_real_state,reward,terminate,truncate,_=env.reset()
-current_state=convert_state(next_real_state)
-i = 0
-while True:
-    action = np.argmax(q_table[current_state])
-    if action == 0:
-        ax_2.text(i,m.iloc[i,0],'B',color='C2')
-    if action == 2:
-        ax_2.text(i,m.iloc[i,0],'S',color='C3')
-    next_real_state, reward, terminate,truncated, _  = env.step(action=action)
-    next_state = convert_state(next_real_state)
-    current_state = next_state
-    i+= 1
-    if terminate:
-        break
-ax_2.set_title(f"Final model's actions {env.total}")
+# m['Close'].plot(ax=ax_2)
+# next_real_state,reward,terminate,truncate,_=env.reset()
+# current_state=convert_state(next_real_state)
+# i = 0
+# while True:
+#     action = np.argmax(q_table[current_state])
+#     if action == 0:
+#         ax_2.text(i,m.iloc[i,0],'B',color='C2')
+#     if action == 2:
+#         ax_2.text(i,m.iloc[i,0],'S',color='C3')
+#     next_real_state, reward, terminate,truncated, _  = env.step(action=action)
+#     next_state = convert_state(next_real_state)
+#     current_state = next_state
+#     i+= 1
+#     if terminate:
+#         break
+# ax_2.set_title(f"Final model's actions {env.total}")
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
