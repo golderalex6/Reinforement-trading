@@ -65,13 +65,7 @@ class A2cTrading(agent):
         self._model = A2C.load(path)
 
 if __name__ == '__main__': 
-    config = {
-            'learning_rate': 0.000192205,
-            'gamma': 0.889382
-        }
-    a2c = A2cTrading(config)
-    a2c.learn(total_timesteps = 40000)
-    # a2c.load()
-    m = a2c.evaluate(show_fig = True)
-    print(m)
-
+    a2c=A2cTrading()
+    # a2c.learn(total_timesteps = 100)
+    a2c.load()
+    a2c.evaluate(show_fig = True)

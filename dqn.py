@@ -9,55 +9,6 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from functional import agent
 from metadata import dqn_metadata
 
-class LstmExtractor(BaseFeaturesExtractor):
-    def __init__(
-            self,
-            observation_space: gym.Space,
-            lstm_hidden_size:int = 128,
-            lstm_num_layers:int = 1,
-            lstm_dropout:float = 0.0
-        ) -> None:
-        """
-        Initializes an LSTM-based neural network for processing sequential data in a reinforcement learning setting.
-
-        Parameters:
-        -----------
-            observation_space (gym.Space): The observation space of the environment, defining the input shape for the network.
-            lstm_hidden_size (int, optional): The number of features in the hidden state of the LSTM. Defaults to 128.
-            lstm_num_layers (int, optional): The number of recurrent layers in the LSTM. Defaults to 1.
-            lstm_dropout (float, optional): The dropout probability for the LSTM layers. Defaults to 0.0.
-
-        Returns:
-        --------
-            None
-        """
-
-        super().__init__(observation_space, lstm_hidden_size)
-        
-        input_size = observation_space.shape[1]
-        self.lstm = torch.nn.LSTM(
-                    input_size = input_size, 
-                    hidden_size = lstm_hidden_size, 
-                    num_layers = lstm_num_layers, 
-                    batch_first = True, 
-                    dropout = lstm_dropout
-                )
-        
-    def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        """
-        Processes input observations through the LSTM and returns the final hidden state.
-
-        Parameters:
-        -----------
-            observations (torch.Tensor): Input tensor containing sequential data, with shape (batch_size, sequence_length, input_size).
-
-        Returns:
-        --------
-            torch.Tensor: The final hidden state of the LSTM, with shape (batch_size, hidden_size).
-        """
-        lstm_out, (h_n, c_n) = self.lstm(observations)
-        return h_n[-1]
-
 class DqnTrading(agent):
 
     def __init__(self,config:dict = {}) -> None:
@@ -118,6 +69,6 @@ class DqnTrading(agent):
 
 if __name__ == '__main__':
     dqn = DqnTrading()
-    dqn.learn()
+    # dqn.learn()
     dqn.load()
     dqn.evaluate()

@@ -9,6 +9,7 @@ plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
 plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
 
 class TradingEnv(gym.Env):
+
     def __init__(self,df:pd.DataFrame,target:float,initial_balance:float = 100) -> None:
         """
         Initializes a custom financial environment for reinforcement learning.
@@ -47,9 +48,8 @@ class TradingEnv(gym.Env):
                             shape=(4,),
                             dtype=float
                         )
-        plt.ion()
-        self._fg = plt.figure()
-        self._ax = self._fg.add_subplot()
+
+        self._fg,self._ax = None,None
 
         self.action_space=gym.spaces.Discrete(3)
 
@@ -110,7 +110,7 @@ class TradingEnv(gym.Env):
 
         self._index+=1
         self.total = self._close.iloc[self._index]*self._coin + self._usd
-        new_state = [self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total]
+        new_state = np.array([self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total])
 
         if self._index==self._df.shape[0]-1:
             if self.total>= self._target:
@@ -140,8 +140,8 @@ class TradingEnv(gym.Env):
                 - initial_state (np.ndarray): The initial state of the environment.
                 - info (dict): Additional information (empty dictionary in this case).
         """
-        self._action_list = []
 
+        self._action_list = []
         self._index=0
 
         self._usd = self._initial_balance
@@ -154,12 +154,15 @@ class TradingEnv(gym.Env):
         self._hold = 0
         self.goal = False
 
-        new_state = [self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total]
+        new_state = np.array([self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total])
 
-
-        return new_state,None,False,False,{}
+        return new_state,{}
 
     def render(self):
+
+        if (self._fg is None) or (self._ax is None):
+            self._fg = plt.figure()
+            self._ax = self._fg.add_subplot()
 
         self._ax.cla()
         self._close.plot(ax = self._ax,color = 'C0')
@@ -178,7 +181,7 @@ class TradingEnv(gym.Env):
 
 if __name__=='__main__':
     seed = np.linspace(0,4*np.pi,10)
-# noise = 0.2*np.random.randn(1000)
+    # noise = 0.2*np.random.randn(1000)
 
     m = pd.DataFrame(4*np.sin(0.5*seed)+10,columns = ['Close'])
     m['Diff'] = m['Close'].diff(1).fillna(0)

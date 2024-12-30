@@ -115,6 +115,7 @@ class agent():
         --------
             None
         """
+
         with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
             self._parameters=json.loads(f.read())
 
@@ -138,8 +139,8 @@ class agent():
         self._df_train=df.loc[self._parameters['start_date']:self._parameters['test_date']]
         self._df_test=df.loc[self._parameters['test_date']:self._parameters['end_date']]
 
-        self._env_train = TradingEnv(df = self._df_train,window_size = self._parameters['window_size'])
-        self._env_test = TradingEnv(df = self._df_test,window_size = self._parameters['window_size'])
+        self._env_train = TradingEnv(df = self._df_train,target = self._parameters['target'],initial_balance = self._parameters['initial_balance'])
+        self._env_test = TradingEnv(df = self._df_test,target = self._parameters['target'],initial_balance = self._parameters['initial_balance'])
 
     def get_config(self) -> dict:
 
@@ -186,7 +187,7 @@ class agent():
         portforlio_history=[]
         action_list=[]
 
-        current_state,info=self._env_train.reset()
+        current_state,info=self._env_test.reset()
         while True:
             action,_=self.predict(current_state)
             action=int(action)
@@ -225,7 +226,4 @@ class agent():
             }
 
 if __name__=='__main__':
-    from metadata import a2c_metadata
-    m = agent(a2c_metadata.METADATA)
-    m._setup()
-    print(m._df_train)
+    pass

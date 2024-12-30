@@ -68,6 +68,6 @@ class PpoTrading(agent):
 
 if __name__ == '__main__': 
     ppo=PpoTrading()
-    ppo.learn()
-    # ppo.load()
+    # ppo.learn()
+    ppo.load()
     ppo.evaluate()
