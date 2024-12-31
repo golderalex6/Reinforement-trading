@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+import random
 import os
 from pathlib import Path
 import pickle
@@ -10,6 +10,7 @@ import typing
 
 from trading_environment import TradingEnv
 from functional import agent
+from metadata import ql_metadata
 
 class QLearning:
     def __init__(
@@ -20,7 +21,7 @@ class QLearning:
             epsilon_decay:float = 0.01,
             qtable_size:list = [7,20,2,50],
             render = True
-        ):
+        ) -> None:
         """
 
         """
@@ -38,12 +39,17 @@ class QLearning:
         self._qtable_segment = (self._env.observation_space.high - self._env.observation_space.low) / self._qtable_size
         self._qtable = np.random.uniform(low=-2, high=-1, size=(self._qtable_size + [self._env.action_space.n]))
 
-    def _convert_state(self,real_state):
+    def _convert_state(self,real_state:np.ndarray) -> typing.Iterable:
+        """
+
+        """
         q_state = (real_state - self._env.observation_space.low) // (self._qtable_segment*1.00001)
         return tuple(q_state.astype(int))
 
-    def learn(self,episodes = 10000,verbose = True):
+    def learn(self,episodes = 10000,verbose = True) -> None:
+        """
 
+        """
         for episode in range(episodes):
 
             next_real_state,_=self._env.reset()
@@ -75,25 +81,72 @@ class QLearning:
                 if self._render:
                     self._env.render()
 
+    def predict(self,state:typing.Any,deterministic = False):
+        """
 
-    def save(self):
+        """
+        action_values = self._qtable[self._convert_state(state)]
+        if deterministic:
+            return np.argmax(action_values)
+        else:
+            probabilities = np.e**action_values/np.sum(np.e**action_values)
+            return random.choices(range(len(action_values)),probabilities)[0]
 
-        with open('qlearing.pkl','wb') as f:
+    def save(self,path) -> None:
+        """
+
+        """
+
+        with open(path,'wb') as f:
             pickle.dump(self._qtable,f)
 
-    def load(self):
+    @staticmethod
+    def load(path:str = '') -> None:
+        """
 
-        with open('qlearing.pkl','rb') as f:
-            self._qtable = pickle.load(f)
+        """
+        with open(path,'rb') as f:
+            qtable = pickle.load(f)
 
-class QlTrading:
-    pass
+        return qtable
+
+
+class QLearningTrading(agent):
+
+    def __init__(self,config:dict = {}) -> None:
+        """
+
+        """
+
+        super().__init__(ql_metadata.METADATA,config)
+
+    def learn(self,total_timesteps:int = 10000) -> None:
+        """
+
+        """
+        self._setup()
+        self._model = QLearning(
+                    self._env_train,
+                    render = False,
+                    **self._metadata
+                )
+
+        self._model.learn(episodes = total_timesteps)
+        self._model.save(os.path.join(Path(__file__).parent,'models','qlearing.pkl'))
+
+    def load(self,path:str = '') -> None:
+        """
+
+        """
+        if path == '':
+            path = os.path.join(Path(__file__).parent,'models','a2c.zip')
+        self._model = QLearning.load(path)
 
 if __name__ == '__main__':
     seed = np.linspace(0,4*np.pi,10)
-    # noise = 0.2*np.random.randn(1000)
 
     m = pd.DataFrame(4*np.sin(0.5*seed)+10,columns = ['Close'])
     env = TradingEnv(df = m,target = 229.99)
-    ql = QLearning(env,render = False)
-    ql.learn()
+    ql = QLearningTrading()
+    ql.learn(100)
+    ql.evaluate()
