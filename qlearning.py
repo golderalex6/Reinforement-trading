@@ -86,11 +86,13 @@ class QLearning:
 
         """
         action_values = self._qtable[self._convert_state(state)]
+        action = None
         if deterministic:
-            return np.argmax(action_values)
+            action = np.argmax(action_values)
         else:
             probabilities = np.e**action_values/np.sum(np.e**action_values)
-            return random.choices(range(len(action_values)),probabilities)[0]
+            action = random.choices(range(len(action_values)),probabilities)[0]
+        return action,None
 
     def save(self,path) -> None:
         """

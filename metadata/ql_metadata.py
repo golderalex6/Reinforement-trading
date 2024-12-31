@@ -4,5 +4,5 @@ METADATA = {
         'discount_value':0.99,
         'epsilon':0.99,
         'epsilon_decay':0.001,
-        'qtable_size':[100,100,2,1000]
+        'qtable_size':[100,200,2,1000]
     }

@@ -43,8 +43,8 @@ class TradingEnv(gym.Env):
         self._target = target
         
         self.observation_space=gym.spaces.Box(
-                            low = np.array([self._close.min(),self._percentage_change.min(),0,0.0]),
-                            high = np.array([self._close.max(),self._percentage_change.max(),1,500.0]),
+                            low = np.array([self._close.min()*0.9,self._percentage_change.min(),0,0.0]),
+                            high = np.array([self._close.max()*1.1,self._percentage_change.max(),1,1000.0]),
                             shape=(4,),
                             dtype=float
                         )
