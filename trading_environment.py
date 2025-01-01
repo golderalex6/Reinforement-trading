@@ -36,15 +36,12 @@ class TradingEnv(gym.Env):
         self._close = self._df['Close']
         self._percentage_change = self._df['Close'].pct_change(1).fillna(0)*100
 
-        self.observation_max = np.array([self._close.max(),self._percentage_change.max(),1,500])
-        self.observation_min = np.array([self._close.min(),self._percentage_change.min(),0,0])
-
         self._initial_balance = initial_balance
         self._target = target
         
         self.observation_space=gym.spaces.Box(
-                            low = np.array([self._close.min()*0.9,self._percentage_change.min(),0,0.0]),
-                            high = np.array([self._close.max()*1.1,self._percentage_change.max(),1,1000.0]),
+                            low = np.array([self._close.min()*0.9,self._percentage_change.min(),0,-100]),
+                            high = np.array([self._close.max()*1.1,self._percentage_change.max(),1,1000]),
                             shape=(4,),
                             dtype=float
                         )
@@ -109,14 +106,29 @@ class TradingEnv(gym.Env):
                 reward  = -2
 
         self._index+=1
-        self.total = self._close.iloc[self._index]*self._coin + self._usd
-        new_state = np.array([self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.total])
 
-        if self._index==self._df.shape[0]-1:
-            if self.total>= self._target:
-                self.goal = True
-                reward = 1000
+        self.total = self._close.iloc[self._index]*self._coin + self._usd
+        self.roi = (self.total - self._initial_balance)*100/self._initial_balance
+        self.pnl = self.total- self._initial_balance
+
+        #if reached the upper bound of roi
+        if self.roi >= 1000 :
+            self.roi = 1000
+            self.goal = True
+            reward = 10
             terminate,truncate=True,True
+
+        #if reached the target at the end of episode
+        if (self.total>= self._target) and (self._index==self._df.shape[0]-1):
+            self.goal = True
+            reward = 10
+            terminate,truncate=True,True
+
+        #if finished the episode(end of dataframe)
+        if self._index==self._df.shape[0]-1:
+            terminate,truncate=True,True
+
+        new_state = np.array([self._close.iloc[self._index],self._percentage_change.iloc[self._index],self._hold,self.roi])
 
         return new_state,reward,terminate,truncate,{}
 
@@ -146,7 +158,10 @@ class TradingEnv(gym.Env):
 
         self._usd = self._initial_balance
         self._coin = 0
+
         self.total = self._close.iloc[self._index]*self._coin + self._usd
+        self.roi = (self.total - self._initial_balance)*100/self._initial_balance
+        self.pnl = self.total- self._initial_balance
 
         self._buy_price = None
         self._sell_price = None

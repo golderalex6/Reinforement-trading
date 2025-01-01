@@ -1,16 +1,14 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
-import json
+import typing
 import os
 from pathlib import Path
-from abc import ABC,abstractmethod
-import typing
 
 from trading_environment import TradingEnv
-
-plt.rc('figure',titleweight='bold',titlesize='large',figsize=(15,6))
-plt.rc('axes',labelweight='bold',labelsize='large',titleweight='bold',titlesize='large',grid=True)
+from stable_baselines3 import A2C,PPO,DQN
+from qlearning import QLearning
 
 def update_dict(main: dict, config: dict):
     """
@@ -100,73 +98,28 @@ def ROI(portforlio_history:typing.Iterable) -> float:
     end_portforlio=portforlio_history.iloc[-1]
     return (end_portforlio-start_portforlio)*100/start_portforlio
 
+class Trading:
+    
+    def __init__(self,algorithm:typing.Callable,parameters:dict = {}) -> None:
+        self._algorithm = algorithm
+        self._model = None
+        self._parameters = parameters
 
-class agent():
+    def learn(self,total_timesteps:int = 10000,**kwargs) -> None:
+        self._model = self._algorithm(**self._parameters)
+        self._model.learn(total_timesteps,**kwargs)
 
-    def __init__(self,metadata:dict,config:dict = {}) -> None:
-        """
-        Initialize the class by loading model parameters from a JSON file.
+    def save(self,path:str):
+        self._model.save(path)
 
-        Parameters:
-        -----------
-            None
+    def load(self,path) -> None:
+        if self._model is None:
+            self._model = self._algorithm.load(path)
 
-        Returns:
-        --------
-            None
-        """
+    def predict(self,state:np.ndarray,desterministic:bool = False) -> typing.Iterable:
+        return self._model.predict(state,desterministic)
 
-        with open(os.path.join(Path(__file__).parent,'parameters.json'),'r+') as f:
-            self._parameters=json.loads(f.read())
-
-        self._metadata = metadata
-        update_dict(self._metadata,config)
-
-    def _setup(self) -> None:
-        """
-        Set up the training and testing environments by loading historical data and splitting it.
-
-        Parameters:
-        -----------
-            None
-
-        Returns:
-        --------
-            None
-        """
-        
-        df=pd.read_csv(os.path.join(Path(__file__).parent,'data',self._parameters['symbol'],f"{self._parameters['symbol']}_1d.csv"),index_col=0)
-        self._df_train=df.loc[self._parameters['start_date']:self._parameters['test_date']]
-        self._df_test=df.loc[self._parameters['test_date']:self._parameters['end_date']]
-
-        self._env_train = TradingEnv(df = self._df_train,target = self._parameters['target'],initial_balance = self._parameters['initial_balance'])
-        self._env_test = TradingEnv(df = self._df_test,target = self._parameters['target'],initial_balance = self._parameters['initial_balance'])
-
-    def get_config(self) -> dict:
-
-        return self._metadata
-
-    @abstractmethod
-    def load(self) -> typing.Any:
-        '''
-        Abstract method
-        '''
-        pass
-
-    def predict(self,state:typing.Any) -> typing.Iterable:
-
-        """
-        Predicts the action(s) for a given state using the loaded PPO model.
-
-        Args:
-            state (Any): The input state for which to predict the action(s).
-
-        Returns:
-            Iterable: The predicted action(s) as output by the model.
-        """
-        return self._model.predict(state,deterministic = False)
-
-    def evaluate(self,show_fig = True) -> dict:
+    def evaluate(self,env:typing.Any,show_fig = True) -> dict:
         """
         Evaluate the model's performance on the test set by simulating trading actions and calculating key metrics.
 
@@ -182,18 +135,19 @@ class agent():
                 closing price during the test period.
         """
 
-        self._setup()
 
-        portforlio_history=[]
+        current_state,info=env.reset()
+
+        portforlio_history=[env.total]
         action_list=[]
 
-        current_state,info=self._env_test.reset()
         while True:
-            action,_=self.predict(current_state)
-            action=int(action)
-            current_state,reward,terminated,truncated,info=self._env_test.step(action)
 
-            portforlio_history.append(self._env_test.total)
+            action,_=self.predict(current_state,False)
+            action=int(action)
+            current_state,reward,terminated,truncated,info=env.step(action)
+
+            portforlio_history.append(env.total)
             action_list.append(action)
 
             if terminated:
@@ -203,20 +157,24 @@ class agent():
         pnl=PnL(portforlio_history)
         roi=ROI(portforlio_history)
 
-        print(f'Max drawdown : {round(drawdown,3)}')
-        print(f'PnL : {round(pnl,3)}')
-        print(f'Roi : {round(roi,3)}')
+        print(f'Max drawdown : {round(drawdown,3)} %')
+        print(f'PnL : {round(pnl,3)} $')
+        print(f'Roi : {round(roi,3)} %')
 
         if show_fig:
             fg=plt.figure()
-            ax=fg.add_subplot()
-            self._df_test['Close'].plot(ax=ax)
+            ax_1=fg.add_subplot(2,1,1)
+            ax_2=fg.add_subplot(2,1,2)
+
+            env._close.plot(ax=ax_1)
             for i in range(len(action_list)):
                 if action_list[i]==0:
-                    ax.text(i,self._df_test.iloc[i,0],'B',color='C2')
+                    ax_1.text(i,env._close.iloc[i],'B',color='C2')
                 elif action_list[i]==2:
-                    ax.text(i,self._df_test.iloc[i,0],'S',color='C3')
-            ax.set_title(f"{self._parameters['symbol']} {self._parameters['test_date']}:{self._parameters['end_date']}")
+                    ax_1.text(i,env._close.iloc[i],'S',color='C3')
+
+            ax_2.plot(portforlio_history)
+            plt.tight_layout()
             plt.show()
 
         return  {
@@ -225,5 +183,20 @@ class agent():
                 'ROI':roi
             }
 
-if __name__=='__main__':
-    pass
+if __name__ == '__main__':
+    seed = np.linspace(0,4*np.pi,10)
+    # noise = 0.2*np.random.randn(1000)
+
+    m = pd.DataFrame(4*np.sin(0.5*seed)+10,columns = ['Close'])
+    env = TradingEnv(df = m,target = 229.99)
+    params = {
+            'env':env,
+            'policy':'MlpPolicy',
+            # 'render':False,
+            'verbose':1,
+            # 'qtable_size':[100,100,2,1200]
+        }
+    trade = Trading(DQN,params)
+    trade.learn(20000)
+    trade.evaluate(env)
+

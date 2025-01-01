@@ -20,7 +20,8 @@ class QLearning:
             epsilon:float = 0.99,
             epsilon_decay:float = 0.01,
             qtable_size:list = [7,20,2,50],
-            render = True
+            render:bool = True,
+            verbose:bool = True
         ) -> None:
         """
 
@@ -28,6 +29,7 @@ class QLearning:
 
         self._env = env
         self._render = render
+        self._verbose = verbose
 
         self._learning_rate = learning_rate
         self._discount_value = discount_value
@@ -46,11 +48,11 @@ class QLearning:
         q_state = (real_state - self._env.observation_space.low) // (self._qtable_segment*1.00001)
         return tuple(q_state.astype(int))
 
-    def learn(self,episodes = 10000,verbose = True) -> None:
+    def learn(self,total_timesteps = 10000) -> None:
         """
 
         """
-        for episode in range(episodes):
+        for step in range(total_timesteps):
 
             next_real_state,_=self._env.reset()
             current_state=self._convert_state(next_real_state)
@@ -74,8 +76,8 @@ class QLearning:
                 current_state = next_state
 
                 if terminate:
-                    if self._env.goal and verbose:
-                        print(f"The agent reached the goal at : {episode}")
+                    if self._env.goal and self._verbose:
+                        print(f"The agent reached the goal at : {step}")
                     break
 
                 if self._render:
@@ -112,43 +114,10 @@ class QLearning:
 
         return qtable
 
-
-class QLearningTrading(agent):
-
-    def __init__(self,config:dict = {}) -> None:
-        """
-
-        """
-
-        super().__init__(ql_metadata.METADATA,config)
-
-    def learn(self,total_timesteps:int = 10000) -> None:
-        """
-
-        """
-        self._setup()
-        self._model = QLearning(
-                    self._env_train,
-                    render = False,
-                    **self._metadata
-                )
-
-        self._model.learn(episodes = total_timesteps)
-        self._model.save(os.path.join(Path(__file__).parent,'models','qlearing.pkl'))
-
-    def load(self,path:str = '') -> None:
-        """
-
-        """
-        if path == '':
-            path = os.path.join(Path(__file__).parent,'models','a2c.zip')
-        self._model = QLearning.load(path)
-
 if __name__ == '__main__':
     seed = np.linspace(0,4*np.pi,10)
 
     m = pd.DataFrame(4*np.sin(0.5*seed)+10,columns = ['Close'])
     env = TradingEnv(df = m,target = 229.99)
-    ql = QLearningTrading()
-    ql.learn(100)
-    ql.evaluate()
+    ql = QLearning(env,render = False)
+    ql.learn(total_timesteps = 50000)
